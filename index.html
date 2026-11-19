@@ -553,3 +553,233 @@
 
       document.getElementById('labelTarifHarian').textContent = formatRupiah(tarif.harian);
       document.getElementById('labelTarifTransport').textContent = formatRupiah(tarif.transport);
+
+      const hariInput = parseInt(document.getElementById('inputHari').value, 10);
+      const jumlahHari = (!isNaN(hariInput) && hariInput > 0) ? hariInput : 1;
+
+      const buktiRadio = document.querySelector('input[name="buktiTransport"]:checked');
+      const isAdaBukti = buktiRadio ? buktiRadio.value === 'Ada' : true;
+      const faktorTransport = isAdaBukti ? 1 : 0.5;
+
+      const penginapanInput = parseFloat(document.getElementById('inputPenginapan').value);
+      const biayaPenginapan = (!isNaN(penginapanInput) && penginapanInput >= 0) ? penginapanInput : 0;
+
+      const totalHarian = jumlahHari * tarif.harian;
+      const totalTransport = tarif.transport * faktorTransport;
+      const totalSemua = totalHarian + totalTransport + biayaPenginapan;
+
+      document.getElementById('resHariText').textContent = jumlahHari;
+      document.getElementById('resUangHarian').textContent = formatRupiah(totalHarian);
+      document.getElementById('resTransport').textContent = formatRupiah(totalTransport);
+      document.getElementById('resPenginapan').textContent = formatRupiah(biayaPenginapan);
+      document.getElementById('resTotal').textContent = formatRupiah(totalSemua);
+
+      const badge = document.getElementById('badgeStatusTransport');
+      if (isAdaBukti) {
+        badge.textContent = 'Transport 100%';
+        badge.className = 'text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+      } else {
+        badge.textContent = 'Transport 50% (Tanpa Bukti)';
+        badge.className = 'text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30';
+      }
+    }
+
+    function copyToWhatsApp() {
+      const nama = document.getElementById('inputNama').value.trim();
+      const select = document.getElementById('selectTujuan');
+      const idx = parseInt(select.value, 10) || 0;
+      const tarif = masterTarif[idx] || { kota: '-', harian: 0, transport: 0 };
+
+      const hariInput = parseInt(document.getElementById('inputHari').value, 10);
+      const jumlahHari = (!isNaN(hariInput) && hariInput > 0) ? hariInput : 1;
+
+      const buktiRadio = document.querySelector('input[name="buktiTransport"]:checked');
+      const isAdaBukti = buktiRadio ? buktiRadio.value === 'Ada' : true;
+
+      const penginapanInput = parseFloat(document.getElementById('inputPenginapan').value);
+      const biayaPenginapan = (!isNaN(penginapanInput) && penginapanInput >= 0) ? penginapanInput : 0;
+
+      const totalHarian = jumlahHari * tarif.harian;
+      const totalTransport = tarif.transport * (isAdaBukti ? 1 : 0.5);
+      const totalSemua = totalHarian + totalTransport + biayaPenginapan;
+
+      let lines = [
+        `*ESTIMASI BIAYA PERJALANAN DINAS*`,
+        `--------------------------------`
+      ];
+      if (nama) {
+        lines.push(`Pegawai : ${nama}`);
+      }
+      lines.push(
+        `Tujuan : *${tarif.kota}*`,
+        `Durasi : ${jumlahHari} Hari`,
+        `Bukti Transport : ${isAdaBukti ? 'Ada (100%)' : 'Tidak Ada (50%)'}`,
+        `--------------------------------`,
+        `• Uang Harian : ${formatRupiah(totalHarian)}`,
+        `• Transport PP : ${formatRupiah(totalTransport)}`,
+        `• Penginapan : ${formatRupiah(biayaPenginapan)}`,
+        `--------------------------------`,
+        `*TOTAL ESTIMASI : ${formatRupiah(totalSemua)}*`
+      );
+
+      const textToCopy = lines.join('\n');
+
+      const tempTextArea = document.createElement('textarea');
+      tempTextArea.value = textToCopy;
+      tempTextArea.style.position = 'fixed';
+      tempTextArea.style.left = '-9999px';
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+      tempTextArea.setSelectionRange(0, 99999);
+
+      try {
+        document.execCommand('copy');
+        showToast('Tersalin! Siap ditempel ke WA');
+      } catch (err) {
+        showToast('Gagal menyalin teks');
+      }
+      document.body.removeChild(tempTextArea);
+    }
+
+    // ==========================================
+    // 5. LOGIKA KELOLA MASTER TARIF
+    // ==========================================
+    function renderMasterList() {
+      const container = document.getElementById('listTarifContainer');
+      document.getElementById('countKota').textContent = masterTarif.length;
+      container.innerHTML = '';
+
+      masterTarif.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-2xl p-3.5 shadow-xs border border-slate-200/90 flex items-center justify-between gap-2';
+        card.innerHTML = `
+          <div class="min-w-0 flex-1">
+            <div class="font-extrabold text-sm text-slate-800 truncate">${item.kota}</div>
+            <div class="text-xs text-slate-500 mt-0.5 space-y-0.5">
+              <div>Harian: <span class="font-semibold text-slate-700">${formatRupiah(item.harian)}</span>/hr</div>
+              <div>Transport PP: <span class="font-semibold text-slate-700">${formatRupiah(item.transport)}</span></div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button type="button" onclick="editTarif(${index})" title="Edit"
+              class="p-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button type="button" onclick="deleteTarif(${index})" title="Hapus"
+              class="p-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function saveTarif() {
+      const kotaRaw = document.getElementById('masterKota').value.trim().toUpperCase();
+      const harian = parseFloat(document.getElementById('masterHarian').value);
+      const transport = parseFloat(document.getElementById('masterTransport').value);
+      const editIdx = parseInt(document.getElementById('editIndex').value, 10);
+
+      if (!kotaRaw) {
+        showToast('Nama kota wajib diisi!');
+        return;
+      }
+      if (isNaN(harian) || harian < 0 || isNaN(transport) || transport < 0) {
+        showToast('Nominal tarif harus berupa angka valid!');
+        return;
+      }
+
+      if (editIdx >= 0 && masterTarif[editIdx]) {
+        masterTarif[editIdx] = { kota: kotaRaw, harian, transport };
+        showToast(`Tarif ${kotaRaw} diperbarui!`);
+      } else {
+        const existIdx = masterTarif.findIndex(item => item.kota === kotaRaw);
+        if (existIdx >= 0) {
+          masterTarif[existIdx] = { kota: kotaRaw, harian, transport };
+          showToast(`Tarif ${kotaRaw} diperbarui!`);
+        } else {
+          masterTarif.push({ kota: kotaRaw, harian, transport });
+          showToast(`Kota ${kotaRaw} ditambahkan!`);
+        }
+      }
+
+      saveToStorage();
+      cancelEditTarif();
+      renderMasterList();
+    }
+
+    function editTarif(index) {
+      const item = masterTarif[index];
+      if (!item) return;
+
+      document.getElementById('editIndex').value = index;
+      document.getElementById('masterKota').value = item.kota;
+      document.getElementById('masterHarian').value = item.harian;
+      document.getElementById('masterTransport').value = item.transport;
+
+      document.getElementById('formMasterTitle').textContent = `Edit Tarif: ${item.kota}`;
+      document.getElementById('btnCancelEdit').classList.remove('hidden');
+      document.getElementById('btnSaveTarif').textContent = 'Simpan Perubahan';
+      document.getElementById('masterKota').focus();
+    }
+
+    function cancelEditTarif() {
+      document.getElementById('editIndex').value = '-1';
+      document.getElementById('masterKota').value = '';
+      document.getElementById('masterHarian').value = '';
+      document.getElementById('masterTransport').value = '';
+
+      document.getElementById('formMasterTitle').textContent = 'Tambah Kota Tujuan Baru';
+      document.getElementById('btnCancelEdit').classList.add('hidden');
+      document.getElementById('btnSaveTarif').textContent = '+ Simpan ke Master Tarif';
+    }
+
+    function deleteTarif(index) {
+      const item = masterTarif[index];
+      if (!item) return;
+
+      if (masterTarif.length <= 1) {
+        showToast('Minimal harus ada 1 kota tersimpan!');
+        return;
+      }
+
+      openModal(
+        'Hapus Kota Tujuan',
+        `Hapus tarif ${item.kota} dari daftar lokal?`,
+        () => {
+          masterTarif.splice(index, 1);
+          saveToStorage();
+          renderMasterList();
+          showToast(`${item.kota} dihapus`);
+        }
+      );
+    }
+
+    function confirmResetModal() {
+      openModal(
+        'Reset ke Default',
+        'Kembalikan daftar tarif ke data awal (atau tarik ulang dari Google Sheets)?',
+        () => {
+          masterTarif = JSON.parse(JSON.stringify(DEFAULT_TARIF));
+          saveToStorage();
+          cancelEditTarif();
+          renderMasterList();
+          syncFromGoogleSheet(false);
+          showToast('Tarif direset ke default');
+        }
+      );
+    }
+
+    // Inisialisasi saat halaman dimuat
+    loadMasterTarif();
+    renderDropdownTujuan();
+    calculateEstimation();
+    syncFromGoogleSheet(false);
+  </script>
+</body>
+</html>
