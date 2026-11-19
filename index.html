@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Kalkulator Estimasi SPPD</title>
+  <!-- Load Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Load Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Menghilangkan panah bawaan input number agar tampilan di HP lebih bersih */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Container Utama (Dibatasi max-w-md agar rapi seperti aplikasi HP di layar besar sekalipun) -->
+  <div class="w-full max-w-md mx-auto bg-slate-50 min-h-screen shadow-lg flex flex-col relative pb-8">
+
+    <!-- Header Aplikasi -->
+    <header class="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-5 pt-6 pb-5 rounded-b-3xl shadow-md">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="inline-block text-[11px] font-semibold uppercase tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full mb-1">
+            Acuan Pergub Riau
+          </span>
+          <h1 class="text-xl font-extrabold tracking-tight">Kalkulator Estimasi SPPD</h1>
+          <p class="text-xs text-emerald-100 mt-0.5">Hitung cepat uang harian, transport & penginapan</p>
+        </div>
+        <div class="w-11 h-11 rounded-2xl bg-white/15 flex items-center justify-center border border-white/20 shadow-inner">
+          <!-- Ikon Kalkulator / Dokumen SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Navigasi Tab -->
+      <nav class="grid grid-cols-2 gap-2 bg-emerald-900/40 p-1.5 rounded-2xl mt-5 backdrop-blur-sm">
+        <button id="tabBtnHitung" onclick="switchTab('hitung')" class="py-2.5 px-3 rounded-xl text-sm font-bold transition-all bg-white text-emerald-800 shadow-sm flex items-center justify-center gap-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+          Hitung Estimasi
+        </button>
+        <button id="tabBtnMaster" onclick="switchTab('master')" class="py-2.5 px-3 rounded-xl text-sm font-semibold transition-all text-emerald-100 hover:text-white flex items-center justify-center gap-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+          Master Tarif
+        </button>
+      </nav>
+    </header>
+
+    <!-- ========================================== -->
+    <!-- HALAMAN 1: HITUNG ESTIMASI                 -->
+    <!-- ========================================== -->
+    <main id="viewHitung" class="px-4 pt-5 space-y-4 flex-1">
+
+      <!-- Form Input Card -->
+      <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/80 space-y-4">
+        
+        <!-- Input Nama Pegawai -->
+        <div>
+          <label for="inputNama" class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1.5">
+            Nama Pegawai <span class="text-slate-400 font-normal lowercase">(opsional)</span>
+          </label>
+          <input type="text" id="inputNama" oninput="calculateEstimation()" placeholder="Contoh: Budi Santoso"
+            class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition" />
+        </div>
+
+        <!-- Dropdown Kota Tujuan -->
+        <div>
+          <label for="selectTujuan" class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1.5">
+            Kota / Kabupaten Tujuan
+          </label>
+          <div class="relative">
+            <select id="selectTujuan" onchange="calculateEstimation()"
+              class="w-full appearance-none px-4 py-3.5 pr-10 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+              <!-- Opsi diisi otomatis oleh JavaScript -->
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-500">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </div>
+          </div>
+          <!-- Info Tarif Kota Terpilih -->
+          <div id="infoTarifKota" class="mt-2 flex items-center justify-between text-[11px] text-slate-500 bg-emerald-50/70 border border-emerald-100 px-3 py-1.5 rounded-xl">
+            <span>Tarif Harian: <strong id="labelTarifHarian" class="text-emerald-800">Rp 0</strong></span>
+            <span>Plafon PP: <strong id="labelTarifTransport" class="text-emerald-800">Rp 0</strong></span>
+          </div>
+        </div>
+
+        <!-- Input Jumlah Hari dengan Tombol Cepat +/- -->
+        <div>
+          <label for="inputHari" class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1.5">
+            Jumlah Hari Perjalanan
+          </label>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="adjustDays(-1)" aria-label="Kurangi hari"
+              class="w-12 h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold text-xl flex items-center justify-center border border-slate-200 transition">
+              −
+            </button>
+            <div class="relative flex-1">
+              <input type="number" id="inputHari" value="1" min="1" max="60" oninput="calculateEstimation()"
+                class="w-full h-12 text-center rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-base font-extrabold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition" />
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">
+                Hari
+              </span>
+            </div>
+            <button type="button" onclick="adjustDays(1)" aria-label="Tambah hari"
+              class="w-12 h-12 rounded-2xl bg-emerald-100 hover:bg-emerald-200 active:scale-95 text-emerald-800 font-bold text-xl flex items-center justify-center border border-emerald-200 transition">
+              +
+            </button>
+          </div>
+        </div>
+
+        <!-- Pilihan Bukti Transport (Tombol Besar Ramah Sentuhan HP) -->
+        <div>
+          <span class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1.5">
+            Bukti Transportasi PP
+          </span>
+          <div class="grid grid-cols-2 gap-2.5">
+            <label class="cursor-pointer">
+              <input type="radio" name="buktiTransport" value="Ada" checked onchange="calculateEstimation()" class="peer sr-only" />
+              <div class="p-3 rounded-2xl border-2 border-slate-200 bg-slate-50 peer-checked:border-emerald-600 peer-checked:bg-emerald-50 transition text-center">
+                <div class="text-sm font-bold text-slate-700 peer-checked:text-emerald-800">Ada Bukti</div>
+                <div class="text-[11px] font-semibold text-emerald-600 mt-0.5">Dibayar 100%</div>
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="buktiTransport" value="Tidak" onchange="calculateEstimation()" class="peer sr-only" />
+              <div class="p-3 rounded-2xl border-2 border-slate-200 bg-slate-50 peer-checked:border-amber-500 peer-checked:bg-amber-50 transition text-center">
+                <div class="text-sm font-bold text-slate-700 peer-checked:text-amber-900">Tanpa Bukti</div>
+                <div class="text-[11px] font-semibold text-amber-600 mt-0.5">Potong 50%</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Input Penginapan -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="inputPenginapan" class="block text-xs font-bold uppercase tracking-wide text-slate-500">
+              Biaya Penginapan (Total)
+            </label>
+            <button type="button" onclick="resetPenginapan()" class="text-[11px] font-semibold text-emerald-700 hover:underline">
+              Set Rp 0
+            </button>
+          </div>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">Rp</span>
+            <input type="number" id="inputPenginapan" value="0" min="0" step="1000" oninput="calculateEstimation()"
+              class="w-full pl-11 pr-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition" />
+          </div>
+          <p class="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-amber-500 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+            Isi <strong>0</strong> jika tidak menginap atau tidak ada kuitansi.
+          </p>
+        </div>
+
+      </section>
+
+      <!-- Kartu Hasil Rincian Real-Time -->
+      <section class="bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-3xl p-5 shadow-lg space-y-3.5">
+        <div class="flex items-center justify-between border-b border-slate-700/80 pb-2.5">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Rincian Estimasi Biaya</span>
+          <span id="badgeStatusTransport" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            Transport 100%
+          </span>
+        </div>
+
+        <div class="space-y-2.5 text-sm">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-300">Uang Harian (<span id="resHariText">1</span> hr)</span>
+            <span id="resUangHarian" class="font-bold text-white">Rp 0</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-300">Transportasi PP</span>
+            <span id="resTransport" class="font-bold text-white">Rp 0</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-300">Penginapan</span>
+            <span id="resPenginapan" class="font-bold text-white">Rp 0</span>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-700/80 flex items-baseline justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Total Estimasi</span>
+          <span id="resTotal" class="text-2xl font-extrabold text-emerald-400 tracking-tight">Rp 0</span>
+        </div>
+
+        <!-- Tombol Salin ke WA -->
+        <button type="button" onclick="copyToWhatsApp()"
+          class="w-full mt-2 py-3.5 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.99] text-slate-950 font-extrabold text-sm shadow-md flex items-center justify-center gap-2 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+          </svg>
+          Salin Rincian ke WA
+        </button>
+      </section>
+
+    </main>
+
+    <!-- ========================================== -->
+    <!-- HALAMAN 2: MASTER TARIF                    -->
+    <!-- ========================================== -->
+    <main id="viewMaster" class="px-4 pt-5 space-y-4 flex-1 hidden">
+
+      <!-- Form Tambah / Edit Kota -->
+      <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/80 space-y-3.5">
+        <div class="flex items-center justify-between">
+          <h2 id="formMasterTitle" class="text-sm font-extrabold text-slate-800">Tambah Kota Tujuan Baru</h2>
+          <button type="button" id="btnCancelEdit" onclick="cancelEditTarif()" class="hidden text-xs font-semibold text-rose-600 hover:underline">
+            Batal Edit
+          </button>
+        </div>
+
+        <input type="hidden" id="editIndex" value="-1" />
+
+        <div>
+          <label for="masterKota" class="block text-xs font-bold text-slate-500 mb-1">Nama Kota / Kabupaten</label>
+          <input type="text" id="masterKota" placeholder="Contoh: PEKANBARU / ROHUL"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold uppercase focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label for="masterHarian" class="block text-xs font-bold text-slate-500 mb-1">Uang Harian / Hari</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
+              <input type="number" id="masterHarian" placeholder="370000" min="0"
+                class="w-full pl-8 pr-2.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white" />
+            </div>
+          </div>
+          <div>
+            <label for="masterTransport" class="block text-xs font-bold text-slate-500 mb-1">Plafon Transport PP</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
+              <input type="number" id="masterTransport" placeholder="650000" min="0"
+                class="w-full pl-8 pr-2.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white" />
+            </div>
+          </div>
+        </div>
+
+        <button type="button" onclick="saveTarif()" id="btnSaveTarif"
+          class="w-full py-3 px-4 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] text-white font-bold text-sm shadow-sm transition">
+          + Simpan ke Master Tarif
+        </button>
+      </section>
+
+      <!-- Daftar Kota Tersimpan -->
+      <section class="space-y-2.5">
+        <div class="flex items-center justify-between px-1">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">
+            Daftar Tarif Tersimpan (<span id="countKota">0</span>)
+          </h3>
+          <button type="button" onclick="confirmResetModal()" class="text-xs font-semibold text-slate-500 hover:text-rose-600 underline">
+            Reset Default
+          </button>
+        </div>
+
+        <div id="listTarifContainer" class="space-y-2.5">
+          <!-- Item daftar kota di-render otomatis oleh JavaScript -->
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Toast Notification (Pengganti alert) -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 translate-y-3">
+    <div class="bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold flex items-center gap-2 border border-slate-700">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+      <span id="toastMessage">Tersalin!</span>
+    </div>
+  </div>
+
+  <!-- Custom Modal Konfirmasi Reset / Hapus (Tanpa confirm() bawaan browser) -->
+  <div id="customModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-xs w-full p-5 shadow-2xl space-y-4">
+      <h4 id="modalTitle" class="text-base font-extrabold text-slate-800">Konfirmasi</h4>
+      <p id="modalDesc" class="text-xs text-slate-600 leading-relaxed">Apakah Anda yakin?</p>
+      <div class="grid grid-cols-2 gap-2.5 pt-1">
+        <button type="button" onclick="closeModal()" class="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+          Batal
+        </button>
+        <button type="button" id="modalConfirmBtn" class="py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs">
+          Ya, Lanjutkan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. DATA DEFAULT & PENYIMPANAN LOCALSTORAGE
+    // ==========================================
+    const STORAGE_KEY = 'sppd_master_tarif_v1';
+
+    const DEFAULT_TARIF = [
+      { kota: 'DUMAI', harian: 370000, transport: 650000 },
+      { kota: 'SIAK', harian: 370000, transport: 400000 },
+      { kota: 'BENGKALIS', harian: 370000, transport: 550000 }
+    ];
+
+    let masterTarif = [];
+
+    // Memuat data dari localStorage atau pakai default jika belum ada
+    function loadMasterTarif() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            masterTarif = parsed;
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('Gagal membaca localStorage:', e);
+      }
+      masterTarif = JSON.parse(JSON.stringify(DEFAULT_TARIF));
+      saveToStorage();
+    }
+
+    // Menyimpan perubahan ke localStorage
+    function saveToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(masterTarif));
+      } catch (e) {
+        showToast('Gagal menyimpan ke memori HP');
+      }
+    }
+
+    // ==========================================
+    // 2. FORMATTER & HELPER UI
+    // ==========================================
+    function formatRupiah(angka) {
+      const num = Number(angka) || 0;
+      return 'Rp ' + num.toLocaleString('id-ID');
+    }
+
+    let toastTimeout;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMessage');
+      toastMsg.textContent = msg;
+      toast.classList.remove('opacity-0', 'translate-y-3');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-3');
+      }, 2400);
+    }
+
+    function openModal(title, desc, onConfirm) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalDesc').textContent = desc;
+      const confirmBtn = document.getElementById('modalConfirmBtn');
+      confirmBtn.onclick = () => {
+        onConfirm();
+        closeModal();
+      };
+      const modal = document.getElementById('customModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('customModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // ==========================================
+    // 3. NAVIGASI TAB
+    // ==========================================
+    function switchTab(tabName) {
+      const viewHitung = document.getElementById('viewHitung');
+      const viewMaster = document.getElementById('viewMaster');
+      const btnHitung = document.getElementById('tabBtnHitung');
+      const btnMaster = document.getElementById('tabBtnMaster');
+
+      if (tabName === 'hitung') {
+        viewHitung.classList.remove('hidden');
+        viewMaster.classList.add('hidden');
+
+        btnHitung.className = 'py-2.5 px-3 rounded-xl text-sm font-bold transition-all bg-white text-emerald-800 shadow-sm flex items-center justify-center gap-1.5';
+        btnMaster.className = 'py-2.5 px-3 rounded-xl text-sm font-semibold transition-all text-emerald-100 hover:text-white flex items-center justify-center gap-1.5';
+        
+        renderDropdownTujuan();
+        calculateEstimation();
+      } else {
+        viewHitung.classList.add('hidden');
+        viewMaster.classList.remove('hidden');
+
+        btnMaster.className = 'py-2.5 px-3 rounded-xl text-sm font-bold transition-all bg-white text-emerald-800 shadow-sm flex items-center justify-center gap-1.5';
+        btnHitung.className = 'py-2.5 px-3 rounded-xl text-sm font-semibold transition-all text-emerald-100 hover:text-white flex items-center justify-center gap-1.5';
+        
+        renderMasterList();
+      }
+    }
+
+    // ==========================================
+    // 4. LOGIKA KALKULATOR ESTIMASI
+    // ==========================================
+    function renderDropdownTujuan() {
+      const select = document.getElementById('selectTujuan');
+      const currentVal = select.value;
+      select.innerHTML = '';
+
+      masterTarif.forEach((item, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = item.kota;
+        select.appendChild(opt);
+      });
+
+      // Pertahankan pilihan kota sebelumnya jika masih ada
+      if (currentVal !== '' && masterTarif[currentVal]) {
+        select.value = currentVal;
+      }
+    }
+
+    function adjustDays(delta) {
+      const input = document.getElementById('inputHari');
+      let current = parseInt(input.value, 10) || 1;
+      current = Math.max(1, current + delta);
+      input.value = current;
+      calculateEstimation();
+    }
+
+    function resetPenginapan() {
+      document.getElementById('inputPenginapan').value = 0;
+      calculateEstimation();
+    }
+
+    function calculateEstimation() {
+      const select = document.getElementById('selectTujuan');
+      const idx = parseInt(select.value, 10) || 0;
+      const tarif = masterTarif[idx] || { kota: '-', harian: 0, transport: 0 };
+
+      // Update info tarif kecil di bawah dropdown
+      document.getElementById('labelTarifHarian').textContent = formatRupiah(tarif.harian);
+      document.getElementById('labelTarifTransport').textContent = formatRupiah(tarif.transport);
+
+      // Ambil input hari (minimal 1)
+      const hariInput = parseInt(document.getElementById('inputHari').value, 10);
+      const jumlahHari = (!isNaN(hariInput) && hariInput > 0) ? hariInput : 1;
+
+      // Cek bukti transport ('Ada' = 100%, 'Tidak' = 50%)
+      const buktiRadio = document.querySelector('input[name="buktiTransport"]:checked');
+      const isAdaBukti = buktiRadio ? buktiRadio.value === 'Ada' : true;
+      const faktorTransport = isAdaBukti ? 1 : 0.5;
+
+      // Ambil nominal penginapan
+      const penginapanInput = parseFloat(document.getElementById('inputPenginapan').value);
+      const biayaPenginapan = (!isNaN(penginapanInput) && penginapanInput >= 0) ? penginapanInput : 0;
+
+      // Hitung komponen biaya
+      const totalHarian = jumlahHari * tarif.harian;
+      const totalTransport = tarif.transport * faktorTransport;
+      const totalSemua = totalHarian + totalTransport + biayaPenginapan;
+
+      // Tampilkan ke kartu hasil
+      document.getElementById('resHariText').textContent = jumlahHari;
+      document.getElementById('resUangHarian').textContent = formatRupiah(totalHarian);
+      document.getElementById('resTransport').textContent = formatRupiah(totalTransport);
+      document.getElementById('resPenginapan').textContent = formatRupiah(biayaPenginapan);
+      document.getElementById('resTotal').textContent = formatRupiah(totalSemua);
+
+      // Update badge status transport
+      const badge = document.getElementById('badgeStatusTransport');
+      if (isAdaBukti) {
+        badge.textContent = 'Transport 100%';
+        badge.className = 'text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+      } else {
+        badge.textContent = 'Transport 50% (Tanpa Bukti)';
+        badge.className = 'text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30';
+      }
+    }
+
+    // Salin ringkasan teks ke clipboard untuk WhatsApp
+    function copyToWhatsApp() {
+      const nama = document.getElementById('inputNama').value.trim();
+      const select = document.getElementById('selectTujuan');
+      const idx = parseInt(select.value, 10) || 0;
+      const tarif = masterTarif[idx] || { kota: '-', harian: 0, transport: 0 };
+
+      const hariInput = parseInt(document.getElementById('inputHari').value, 10);
+      const jumlahHari = (!isNaN(hariInput) && hariInput > 0) ? hariInput : 1;
+
+      const buktiRadio = document.querySelector('input[name="buktiTransport"]:checked');
+      const isAdaBukti = buktiRadio ? buktiRadio.value === 'Ada' : true;
+
+      const penginapanInput = parseFloat(document.getElementById('inputPenginapan').value);
+      const biayaPenginapan = (!isNaN(penginapanInput) && penginapanInput >= 0) ? penginapanInput : 0;
+
+      const totalHarian = jumlahHari * tarif.harian;
+      const totalTransport = tarif.transport * (isAdaBukti ? 1 : 0.5);
+      const totalSemua = totalHarian + totalTransport + biayaPenginapan;
+
+      let lines = [
+        `*ESTIMASI BIAYA PERJALANAN DINAS*`,
+        `--------------------------------`
+      ];
+      if (nama) {
+        lines.push(`Pegawai : ${nama}`);
+      }
+      lines.push(
+        `Tujuan : *${tarif.kota}*`,
+        `Durasi : ${jumlahHari} Hari`,
+        `Bukti Transport : ${isAdaBukti ? 'Ada (100%)' : 'Tidak Ada (50%)'}`,
+        `--------------------------------`,
+        `• Uang Harian : ${formatRupiah(totalHarian)}`,
+        `• Transport PP : ${formatRupiah(totalTransport)}`,
+        `• Penginapan : ${formatRupiah(biayaPenginapan)}`,
+        `--------------------------------`,
+        `*TOTAL ESTIMASI : ${formatRupiah(totalSemua)}*`
+      );
+
+      const textToCopy = lines.join('\n');
+
+      // Menggunakan textarea sementara + execCommand('copy') agar kompatibel penuh di mobile/iframe
+      const tempTextArea = document.createElement('textarea');
+      tempTextArea.value = textToCopy;
+      tempTextArea.style.position = 'fixed';
+      tempTextArea.style.left = '-9999px';
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+      tempTextArea.setSelectionRange(0, 99999);
+
+      try {
+        document.execCommand('copy');
+        showToast('Tersalin! Siap ditempel ke WA');
+      } catch (err) {
+        showToast('Gagal menyalin teks');
+      }
+      document.body.removeChild(tempTextArea);
+    }
+
+    // ==========================================
+    // 5. LOGIKA KELOLA MASTER TARIF
+    // ==========================================
+    function renderMasterList() {
+      const container = document.getElementById('listTarifContainer');
+      document.getElementById('countKota').textContent = masterTarif.length;
+      container.innerHTML = '';
+
+      masterTarif.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-2xl p-3.5 shadow-xs border border-slate-200/90 flex items-center justify-between gap-2';
+        card.innerHTML = `
+          <div class="min-w-0 flex-1">
+            <div class="font-extrabold text-sm text-slate-800 truncate">${item.kota}</div>
+            <div class="text-xs text-slate-500 mt-0.5 space-y-0.5">
+              <div>Harian: <span class="font-semibold text-slate-700">${formatRupiah(item.harian)}</span>/hr</div>
+              <div>Transport PP: <span class="font-semibold text-slate-700">${formatRupiah(item.transport)}</span></div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button type="button" onclick="editTarif(${index})" title="Edit"
+              class="p-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button type="button" onclick="deleteTarif(${index})" title="Hapus"
+              class="p-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function saveTarif() {
+      const kotaRaw = document.getElementById('masterKota').value.trim().toUpperCase();
+      const harian = parseFloat(document.getElementById('masterHarian').value);
+      const transport = parseFloat(document.getElementById('masterTransport').value);
+      const editIdx = parseInt(document.getElementById('editIndex').value, 10);
+
+      if (!kotaRaw) {
+        showToast('Nama kota wajib diisi!');
+        return;
+      }
+      if (isNaN(harian) || harian < 0 || isNaN(transport) || transport < 0) {
+        showToast('Nominal tarif harus berupa angka valid!');
+        return;
+      }
+
+      if (editIdx >= 0 && masterTarif[editIdx]) {
+        masterTarif[editIdx] = { kota: kotaRaw, harian, transport };
+        showToast(`Tarif ${kotaRaw} diperbarui!`);
+      } else {
+        // Cek duplikat nama kota
+        const existIdx = masterTarif.findIndex(item => item.kota === kotaRaw);
+        if (existIdx >= 0) {
+          masterTarif[existIdx] = { kota: kotaRaw, harian, transport };
+          showToast(`Tarif ${kotaRaw} diperbarui!`);
+        } else {
+          masterTarif.push({ kota: kotaRaw, harian, transport });
+          showToast(`Kota ${kotaRaw} ditambahkan!`);
+        }
+      }
+
+      saveToStorage();
+      cancelEditTarif();
+      renderMasterList();
+    }
+
+    function editTarif(index) {
+      const item = masterTarif[index];
+      if (!item) return;
+
+      document.getElementById('editIndex').value = index;
+      document.getElementById('masterKota').value = item.kota;
+      document.getElementById('masterHarian').value = item.harian;
+      document.getElementById('masterTransport').value = item.transport;
+
+      document.getElementById('formMasterTitle').textContent = `Edit Tarif: ${item.kota}`;
+      document.getElementById('btnSaveTarif').textContent = 'Simpan Perubahan';
+      document.getElementById('btnCancelEdit').classList.remove('hidden');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEditTarif() {
+      document.getElementById('editIndex').value = '-1';
+      document.getElementById('masterKota').value = '';
+      document.getElementById('masterHarian').value = '';
+      document.getElementById('masterTransport').value = '';
+
+      document.getElementById('formMasterTitle').textContent = 'Tambah Kota Tujuan Baru';
+      document.getElementById('btnSaveTarif').textContent = '+ Simpan ke Master Tarif';
+      document.getElementById('btnCancelEdit').classList.add('hidden');
+    }
+
+    function deleteTarif(index) {
+      if (masterTarif.length <= 1) {
+        showToast('Minimal harus ada 1 kota di Master Tarif!');
+        return;
+      }
+      const target = masterTarif[index];
+      openModal(
+        'Hapus Kota Tujuan?',
+        `Hapus "${target.kota}" dari daftar Master Tarif?`,
+        () => {
+          masterTarif.splice(index, 1);
+          saveToStorage();
+          cancelEditTarif();
+          renderMasterList();
+          showToast(`Kota ${target.kota} dihapus`);
+        }
+      );
+    }
+
+    function confirmResetModal() {
+      openModal(
+        'Reset Master Tarif?',
+        'Daftar kota akan dikembalikan ke data awal (Dumai, Siak, Bengkalis).',
+        () => {
+          masterTarif = JSON.parse(JSON.stringify(DEFAULT_TARIF));
+          saveToStorage();
+          cancelEditTarif();
+          renderMasterList();
+          showToast('Master Tarif direset ke awal');
+        }
+      );
+    }
+
+    // ==========================================
+    // 6. INISIALISASI SAAT APLIKASI DIBUKA
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+      loadMasterTarif();
+      renderDropdownTujuan();
+      calculateEstimation();
+    });
+  </script>
+</body>
+</html>
