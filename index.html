@@ -551,4 +551,5 @@
       const idx = parseInt(select.value, 10) || 0;
       const tarif = masterTarif[idx] || { kota: '-', harian: 0, transport: 0 };
 
-      document.getElementById('
+      document.getElementById('labelTarifHarian').textContent = formatRupiah(tarif.harian);
+      document.getElementById('labelTarifTransport').textContent = formatRupiah(tarif.transport);
